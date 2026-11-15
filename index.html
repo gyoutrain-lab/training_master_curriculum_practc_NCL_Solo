@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistem Penilaian Praktek Terintegrasi NCL Rubric & SOLO Taxonomy — BP3MI Aceh & AKPER Teungku Fakinah</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --navy: #1b365d;
+      --navy-light: #2c5282;
+      --teal: #0f766e;
+      --indigo: #3730a3;
+      --amber: #92400e;
+      --rose: #881337;
+      --purple: #6b21a8;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #cbd5e1;
+      --text: #1e293b;
+      --muted: #64748b;
+    }
+    * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); }
+    header {
+      background: linear-gradient(135deg, var(--navy), var(--navy-light));
+      color: #fff; padding: 20px; text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+    header h1 { margin: 0 0 4px; font-size: 1.35rem; letter-spacing: 0.3px; }
+    header p { margin: 0; font-size: 0.9rem; opacity: 0.9; }
+    .container { max-width: 1550px; margin: 20px auto; padding: 0 16px; }
+
+    /* Module Navigation */
+    .module-nav {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .tab-btn {
+      border: 1px solid var(--border); background: #f8fafc; color: var(--text);
+      padding: 7px 11px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;
+      cursor: pointer; transition: 0.15s;
+    }
+    .tab-btn:hover { background: #e2e8f0; }
+    .tab-btn.active { color: #fff; border-color: transparent; }
+    .tab-btn[data-cat="MASTER"].active { background: var(--navy); }
+    .tab-btn[data-cat="ENGLISH"].active { background: var(--teal); }
+    .tab-btn[data-cat="INTERVIEW"].active { background: var(--indigo); }
+    .tab-btn[data-cat="INTEGRATED"].active { background: var(--amber); }
+    .tab-btn[data-cat="DRAMA"].active { background: var(--rose); }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+      gap: 12px; margin-bottom: 16px;
+    }
+    .stat-card {
+      background: var(--card); border-radius: 10px; padding: 14px;
+      border: 1px solid var(--border);
+    }
+    .stat-card span { display: block; font-size: 0.74rem; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+    .stat-card strong { display: block; font-size: 1.38rem; color: var(--navy); margin-top: 4px; }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between;
+      align-items: center; background: var(--card); padding: 12px 16px;
+      border-radius: 10px; border: 1px solid var(--border); margin-bottom: 14px;
+    }
+    .active-title { font-weight: 700; font-size: 0.98rem; color: var(--navy); }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 7px; }
+    button.action-btn {
+      border: none; border-radius: 7px; padding: 8px 12px; font-size: 0.83rem;
+      font-weight: 600; cursor: pointer; transition: 0.15s;
+    }
+    button.action-btn:hover { opacity: 0.92; }
+    .btn-primary { background: var(--navy); color: #fff; }
+    .btn-success { background: #0f766e; color: #fff; }
+    .btn-doc { background: #2563eb; color: #fff; }
+    .btn-pdf { background: #b91c1c; color: #fff; }
+    .btn-outline { background: #fff; color: var(--text); border: 1px solid var(--border); }
+    .btn-danger { background: #fee2e2; color: #991b1b; }
+
+    /* NCL Rubric / SOLO Taxonomy Official Guide Box */
+    .ncl-guide {
+      background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 10px;
+      padding: 14px 16px; margin-bottom: 14px; font-size: 0.82rem; color: #581c87;
+    }
+    .ncl-guide h3 { margin: 0 0 8px; font-size: 0.92rem; color: var(--purple); }
+    .ncl-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 10px;
+    }
+    .ncl-item { background: #fff; padding: 8px 10px; border-radius: 6px; border: 1px solid #f3e8ff; }
+    .ncl-item strong { color: var(--purple); display: block; margin-bottom: 2px; }
+
+    /* Table Layout */
+    .table-wrap {
+      background: var(--card); border-radius: 10px; border: 1px solid var(--border);
+      overflow-x: auto; box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    table { width: 100%; border-collapse: collapse; min-width: 1350px; }
+    th {
+      background: var(--navy); color: #fff; font-size: 0.74rem;
+      text-transform: uppercase; padding: 8px 4px; border: 1px solid #2c4a75; text-align: center;
+    }
+    th.ncl-th { background: var(--purple); border-color: #581c87; }
+    th.sub-th { font-size: 0.66rem; background: #581c87; border-color: #6b21a8; }
+    td { border: 1px solid var(--border); padding: 4px 5px; text-align: center; font-size: 0.82rem; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    td input, td select {
+      width: 100%; border: 1px solid transparent; background: transparent;
+      padding: 4px; font-size: 0.82rem; border-radius: 4px; color: var(--text);
+    }
+    td input:focus, td select:focus { outline: none; border-color: var(--navy-light); background: #fff; }
+    td select { text-align-last: center; cursor: pointer; background: #fff; border: 1px solid var(--border); font-weight: 600; color: var(--purple); }
+    td input.num { text-align: center; font-weight: 600; }
+    td input[readonly] { color: #334155; font-weight: 600; cursor: default; background: #f1f5f9; }
+    .bold-val { font-weight: 700; }
+
+    .badge {
+      display: inline-block; padding: 3px 8px; border-radius: 999px;
+      font-size: 0.72rem; font-weight: 700; white-space: nowrap;
+    }
+    .b-sangat { background: #dcfce7; color: #166534; }
+    .b-meningkat { background: #dbeafe; color: #1e40af; }
+    .b-cukup { background: #fef3c7; color: #92400e; }
+    .b-tetap { background: #f1f5f9; color: #475569; }
+    .b-turun { background: #fee2e2; color: #991b1b; }
+    .del-btn { background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 1rem; }
+    .del-btn:hover { color: #dc2626; }
+    .hint { font-size: 0.82rem; color: var(--muted); margin-top: 10px; }
+
+    @media print {
+      body { background: #fff !important; font-size: 10px; }
+      header { background: #1b365d !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 10px; }
+      .module-nav, .toolbar, .del-btn, .hint, th:last-child, td:last-child { display: none !important; }
+      .container { max-width: 100%; margin: 0; padding: 0; }
+      .stats-grid { grid-template-columns: repeat(6, 1fr); gap: 6px; margin-bottom: 10px; }
+      .stat-card { padding: 6px; border: 1px solid #94a3b8; }
+      .table-wrap { border: none; box-shadow: none; overflow: visible; }
+      table { min-width: 100%; width: 100%; font-size: 9px; }
+      th, td { padding: 3px; border: 1px solid #64748b; }
+      th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; border: 1px solid #cbd5e1; }
+      input, select { border: none !important; padding: 0 !important; font-size: 9px !important; background: transparent !important; }
+      .print-header-meta { display: block !important; margin-bottom: 6px; font-weight: 700; font-size: 11px; color: #1b365d; }
+    }
+    .print-header-meta { display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>SISTEM PENILAIAN UPGRADING — NCL RUBRIC & SOLO TAXONOMY TERINTEGRASI</h1>
+  <p>BP3MI Aceh × AKPER Teungku Fakinah Banda Aceh (11 Modul Kompetensi Tersemat 5 Aspek NCL Rubric / SOLO Taxonomy)</p>
+</header>
+
+<div class="container">
+  <div class="module-nav" id="moduleNav"></div>
+  <div class="print-header-meta" id="printMeta"></div>
+  <div class="stats-grid" id="statsGrid"></div>
+
+  <div class="ncl-guide" id="nclGuideBox">
+    <h3>🩺 Kriteria Resmi NCL Rubric / SOLO Taxonomy 5-Aspek (Tersemat pada Setiap Modul Kompetensi)</h3>
+    <div class="ncl-grid">
+      <div class="ncl-item">
+        <strong>1. Comprehension (20%)</strong>
+        Level 1(20): Gagal paham | Level 3(60): Paham sedang | Level 5(100): Paham utuh & akurat.
+      </div>
+      <div class="ncl-item">
+        <strong>2. Fluency (20%)</strong>
+        Level 1(20): Terputus-putus | Level 3(60): Sering terganggu | Level 5(100): Lancar mulus tanpa hambatan.
+      </div>
+      <div class="ncl-item">
+        <strong>3. Vocabulary (20%)</strong>
+        Level 1(20): Sangat terbatas | Level 3(60): Kadang salah kata | Level 5(100): Istilah klinis sangat tepat.
+      </div>
+      <div class="ncl-item">
+        <strong>4. Pronunciation (20%)</strong>
+        Level 1(20): Sulit dipahami | Level 3(60): Ada salah minor | Level 5(100): Pelafalan jelas & akurat.
+      </div>
+      <div class="ncl-item">
+        <strong>5. Grammar (20%)</strong>
+        Level 1(20): Kesalahan berat | Level 3(60): Ada salah arti minor | Level 5(100): Tata bahasa sempurna benar.
+      </div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="active-title" id="activeModuleTitle">Master Rekapitulasi Integrasi</div>
+    <div class="btn-group">
+      <button class="action-btn btn-primary" onclick="addRow()">+ Tambah Peserta</button>
+      <button class="action-btn btn-outline" onclick="pasteFromClipboard()">📋 Paste Excel</button>
+      <button class="action-btn btn-success" onclick="exportAllToExcel()">📊 Simpan Excel (.xlsx)</button>
+      <button class="action-btn btn-doc" onclick="exportToWordDoc()">📝 Simpan Doc (.doc)</button>
+      <button class="action-btn btn-pdf" onclick="printOrSavePdf()">🖨️ Simpan PDF / Print</button>
+      <button class="action-btn btn-danger" onclick="resetAll()">Reset</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table id="mainDataTable">
+      <thead id="tableHead"></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  <p class="hint" id="modeHint"></p>
+</div>
+
+<script>
+  const MODULES = [
+    { id: 'MASTER', cat: 'MASTER', label: '📊 Master Rekap Integrasi (11 Modul)', full: 'MASTER REKAPITULASI INTEGRASI — AGREGAT 11 MODUL DENGAN 5 ASPEK NCL RUBRIC / SOLO TAXONOMY' },
+    { id: 'EN_1_1', cat: 'ENGLISH', label: '1.1 Basic Pattern', full: 'ENGLISH 1.1 — BASIC PATTERN (TERINTEGRASI 5 ASPEK NCL RUBRIC / SOLO)' },
+    { id: 'EN_1_2', cat: 'ENGLISH', label: '1.2 Parts of Speech', full: 'ENGLISH 1.2 — PARTS OF SPEECH (TERINTEGRASI 5 ASPEK NCL RUBRIC / SOLO)' },
+    { id: 'EN_1_3', cat: 'ENGLISH', label: '1.3 Tenses', full: 'ENGLISH 1.3 — TENSES (TERINTEGRASI 5 ASPEK NCL RUBRIC / SOLO)' },
+    { id: 'EN_1_4', cat: 'ENGLISH', label: '1.4 Sentences', full: 'ENGLISH 1.4 — SENTENCES (TERINTEGRASI 5 ASPEK NCL RUBRIC / SOLO)' },
+    { id: 'EN_1_5', cat: 'ENGLISH', label: '1.5 Vocabulary', full: 'ENGLISH 1.5 — VOCABULARY BUILDING (TERINTEGRASI 5 ASPEK NCL RUBRIC / SOLO)' },
+    { id: 'JI_3_1', cat: 'INTERVIEW', label: '3.1 Rationale', full: 'JOB INTERVIEW 3.1 — RATIONALE (TERINTEGRASI 5 ASPEK NCL RUBRIC / SOLO)' },
+    { id: 'JI_3_2', cat: 'INTERVIEW', label: '3.2 STAR Technique', full: 'JOB INTERVIEW 3.2 — STAR TECHNIQUE (TERINTEGRASI 5 ASPEK NCL RUBRIC / SOLO)' },
+    { id: 'JI_3_4', cat: 'INTERVIEW', label: '3.4 Most Cases', full: 'JOB INTERVIEW 3.4 — MOST CASES (TERINTEGRASI 5 ASPEK NCL RUBRIC / SOLO)' },
+    { id: 'JI_3_5', cat: 'INTERVIEW', label: '3.5 Practice Sim', full: 'JOB INTERVIEW 3.5 — PRACTICE SIMULATION (TERINTEGRASI 5 ASPEK NCL RUBRIC / SOLO)' },
+    { id: 'INT_FINAL', cat: 'INTEGRATED', label: 'Integrated Final', full: 'INTEGRATED SIMULATION & FINAL ASSESSMENT (TERINTEGRASI 5 ASPEK NCL RUBRIC / SOLO)' },
+    { id: 'DRAMA', cat: 'DRAMA', label: 'English Drama', full: 'ENGLISH DRAMA PERFORMANCE (TERINTEGRASI 5 ASPEK NCL RUBRIC / SOLO)' }
+  ];
+
+  const EXAM_11_MODULES = MODULES.filter(m => m.id !== 'MASTER');
+  const STORAGE_KEY = 'bp3mi_akper_ncl_embedded_v9';
+  let activeModuleId = 'MASTER';
+
+  function createInitialState() {
+    const samples = [
+      { name: 'Putri Intan Ridayana', telp: '081265853564' },
+      { name: 'Elya Susanti', telp: '082313643995' },
+      { name: 'Maulidar', telp: '082295925848' },
+      { name: 'Anis Sagita', telp: '082311500461' },
+      { name: 'Safira Kemala Putri', telp: '085372326443' },
+      { name: 'Rizki Febriwanti', telp: '082260285623' },
+      { name: 'Sarah Salsa Fitri', telp: '085281957889' },
+      { name: 'Mirdha Rosalindar', telp: '082370466761' },
+      { name: 'Miftahul Hasanah', telp: '089910063663' },
+      { name: 'Qhotorun Nada Sari', telp: '08137408654' },
+      { name: 'Maisarah', telp: '085268952162' },
+      { name: 'Nadariah', telp: '082210933772' },
+      { name: 'Irmanda Putri Safira', telp: '082183934653' },
+      { name: 'Ayu Anggira Effendi', telp: '087827888832' },
+      { name: 'Nadia Vonna', telp: '0822754237933' },
+      { name: 'Fitriani', telp: '0085143141537' }
+    ];
+
+    return samples.map((s, pIdx) => {
+      const scores = {};
+      EXAM_11_MODULES.forEach((m, mIdx) => {
+        scores[m.id] = {
+          pre1: ((mIdx + pIdx) % 2) + 2, pre2: 2, pre3: 3, pre4: 3, pre5: 2,
+          post1: 4, post2: 4, post3: 4, post4: 4, post5: 4
+        };
+      });
+      return { name: s.name, telp: s.telp, scores };
+    });
+  }
+
+  let participants = JSON.parse(localStorage.getItem(STORAGE_KEY)) || createInitialState();
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(participants));
+  }
+
+  function calcNclScores(subScores) {
+    const s = subScores || {};
+    const keysPre = ['pre1', 'pre2', 'pre3', 'pre4', 'pre5'];
+    const keysPost = ['post1', 'post2', 'post3', 'post4', 'post5'];
+
+    let preSum = 0, preCnt = 0;
+    keysPre.forEach(k => {
+      if (s[k] !== '' && s[k] !== null && s[k] !== undefined && !isNaN(parseFloat(s[k]))) {
+        preSum += parseFloat(s[k]) * 20 * 0.20;
+        preCnt++;
+      }
+    });
+
+    let postSum = 0, postCnt = 0;
+    keysPost.forEach(k => {
+      if (s[k] !== '' && s[k] !== null && s[k] !== undefined && !isNaN(parseFloat(s[k]))) {
+        postSum += parseFloat(s[k]) * 20 * 0.20;
+        postCnt++;
+      }
+    });
+
+    const preFinal = preCnt === 5 ? +preSum.toFixed(1) : (preCnt > 0 ? +((preSum / preCnt) * 5).toFixed(1) : '');
+    const postFinal = postCnt === 5 ? +postSum.toFixed(1) : (postCnt > 0 ? +((postSum / postCnt) * 5).toFixed(1) : '');
+
+    const { growth, pct, pred } = calcMetrics(preFinal, postFinal);
+    return { pre: preFinal, post: postFinal, growth, pct, pred };
+  }
+
+  function getPredikat(growth) {
+    if (growth === null || isNaN(growth)) return { label: '-', cls: '' };
+    if (growth >= 20) return { label: 'Sangat Meningkat', cls: 'b-sangat' };
+    if (growth >= 10) return { label: 'Meningkat', cls: 'b-meningkat' };
+    if (growth > 0)   return { label: 'Cukup Meningkat', cls: 'b-cukup' };
+    if (growth === 0) return { label: 'Tetap / Stagnan', cls: 'b-tetap' };
+    return { label: 'Menurun', cls: 'b-turun' };
+  }
+
+  function calcMetrics(pre, post) {
+    if (pre === '' || post === '' || pre === null || post === null || isNaN(pre) || isNaN(post)) {
+      return { growth: null, pct: null, pred: { label: '-', cls: '' } };
+    }
+    const p1 = parseFloat(pre);
+    const p2 = parseFloat(post);
+    const growth = +(p2 - p1).toFixed(1);
+    const pct = p1 === 0 ? (p2 > 0 ? 100 : 0) : +(((p2 - p1) / p1) * 100).toFixed(1);
+    return { growth, pct, pred: getPredikat(growth) };
+  }
+
+  function getParticipantAggregateScores(p) {
+    let sumPre = 0, cntPre = 0, sumPost = 0, cntPost = 0;
+
+    EXAM_11_MODULES.forEach(m => {
+      const sc = (p.scores && p.scores[m.id]) || {};
+      const res = calcNclScores(sc);
+      if (res.pre !== '' && !isNaN(parseFloat(res.pre))) { sumPre += parseFloat(res.pre); cntPre++; }
+      if (res.post !== '' && !isNaN(parseFloat(res.post))) { sumPost += parseFloat(res.post); cntPost++; }
+    });
+
+    const aggPre = cntPre ? +(sumPre / cntPre).toFixed(1) : '';
+    const aggPost = cntPost ? +(sumPost / cntPost).toFixed(1) : '';
+    const { growth, pct, pred } = calcMetrics(aggPre, aggPost);
+
+    return {
+      pre: aggPre,
+      post: aggPost,
+      growth,
+      pct,
+      pred,
+      activeCount: Math.max(cntPre, cntPost)
+    };
+  }
+
+  function renderNav() {
+    const nav = document.getElementById('moduleNav');
+    nav.innerHTML = MODULES.map(m => `
+      <button class="tab-btn ${m.id === activeModuleId ? 'active' : ''}" data-cat="${m.cat}" onclick="switchModule('${m.id}')">
+        ${m.label}
+      </button>
+    `).join('');
+  }
+
+  function switchModule(modId) {
+    activeModuleId = modId;
+    renderNav();
+    renderTable();
+  }
+
+  function renderTable() {
+    const modObj = MODULES.find(m => m.id === activeModuleId);
+    document.getElementById('activeModuleTitle').textContent = modObj.full;
+    document.getElementById('printMeta').textContent = `LAPORAN — ${modObj.full} | BP3MI ACEH × AKPER TEUNGKU FAKINAH`;
+
+    const isMaster = activeModuleId === 'MASTER';
+    const thead = document.getElementById('tableHead');
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+
+    if (isMaster) {
+      thead.innerHTML = `
+        <tr>
+          <th style="width:40px;">No</th>
+          <th style="width:22%;">Name</th>
+          <th style="width:14%;">Telp Number</th>
+          <th style="width:9%;">Modul Terisi</th>
+          <th style="width:10%;">Agregat Pre (100)</th>
+          <th style="width:10%;">Agregat Post (100)</th>
+          <th style="width:9%;">Growth</th>
+          <th style="width:12%;">% Growth</th>
+          <th style="width:14%;">Predikat Keseluruhan</th>
+          <th style="width:40px;">Aksi</th>
+        </tr>
+      `;
+
+      document.getElementById('modeHint').innerHTML =
+        '📊 <strong>Master Rekapitulasi Terintegrasi:</strong> Nilai agregat dihitung otomatis sebagai rata-rata dari ke-11 modul kompetensi subjek yang masing-masing telah dinilai menggunakan 5 Aspek NCL Rubric / SOLO Taxonomy.';
+
+      participants.forEach((p, idx) => {
+        const agg = getParticipantAggregateScores(p);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td><input type="text" value="${escapeHtml(p.name || '')}" placeholder="Nama peserta..." oninput="updateIdentity(${idx}, 'name', this.value)"></td>
+          <td><input type="text" value="${escapeHtml(p.telp || '')}" placeholder="08..." oninput="updateIdentity(${idx}, 'telp', this.value)"></td>
+          <td style="color:var(--muted);font-weight:600;">${agg.activeCount} / 11</td>
+          <td><input type="number" class="num" value="${agg.pre ?? ''}" readonly placeholder="-"></td>
+          <td><input type="number" class="num" value="${agg.post ?? ''}" readonly placeholder="-"></td>
+          <td class="bold-val" style="color:${agg.growth > 0 ? '#166534' : agg.growth < 0 ? '#991b1b' : '#475569'}">
+            ${agg.growth !== null ? (agg.growth > 0 ? '+' + agg.growth.toFixed(1) : agg.growth.toFixed(1)) : '-'}
+          </td>
+          <td class="bold-val" style="color:${agg.pct > 0 ? '#166534' : agg.pct < 0 ? '#991b1b' : '#475569'}">
+            ${agg.pct !== null ? (agg.pct > 0 ? '+' + agg.pct.toFixed(1) + '%' : agg.pct.toFixed(1) + '%') : '-'}
+          </td>
+          <td>${agg.pred.cls ? `<span class="badge ${agg.pred.cls}">${agg.pred.label}</span>` : '-'}</td>
+          <td><button class="del-btn" title="Hapus" onclick="deleteRow(${idx})">✕</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+    } else {
+      thead.innerHTML = `
+        <tr>
+          <th class="ncl-th" rowspan="2" style="width:36px;">No</th>
+          <th class="ncl-th" rowspan="2" style="width:16%;">Name</th>
+          <th class="ncl-th" rowspan="2" style="width:11%;">Telp Number</th>
+          <th class="ncl-th" colspan="5">PRE TEST 5 ASPEK NCL RUBRIC (Level 1–5)</th>
+          <th class="ncl-th" rowspan="2" style="width:7%;">Pre (100)</th>
+          <th class="ncl-th" colspan="5">POST TEST 5 ASPEK NCL RUBRIC (Level 1–5)</th>
+          <th class="ncl-th" rowspan="2" style="width:7%;">Post (100)</th>
+          <th class="ncl-th" rowspan="2" style="width:7%;">Growth</th>
+          <th class="ncl-th" rowspan="2" style="width:8%;">% Growth</th>
+          <th class="ncl-th" rowspan="2" style="width:11%;">Predikat</th>
+          <th class="ncl-th" rowspan="2" style="width:36px;">Aksi</th>
+        </tr>
+        <tr>
+          <th class="sub-th">Compr</th>
+          <th class="sub-th">Fluen</th>
+          <th class="sub-th">Vocab</th>
+          <th class="sub-th">Pron</th>
+          <th class="sub-th">Gram</th>
+          <th class="sub-th">Compr</th>
+          <th class="sub-th">Fluen</th>
+          <th class="sub-th">Vocab</th>
+          <th class="sub-th">Pron</th>
+          <th class="sub-th">Gram</th>
+        </tr>
+      `;
+
+      document.getElementById('modeHint').innerHTML = `
+        🩺 <strong>Mode Modul [${modObj.label}]:</strong> Penilaian mata uji ini menggunakan 5 Aspek NCL Rubric / SOLO Taxonomy secara utuh dan terintegrasi.
+      `;
+
+      participants.forEach((p, idx) => {
+        if (!p.scores) p.scores = {};
+        if (!p.scores[activeModuleId]) p.scores[activeModuleId] = { pre1: '', pre2: '', pre3: '', pre4: '', pre5: '', post1: '', post2: '', post3: '', post4: '', post5: '' };
+        const sc = p.scores[activeModuleId];
+        const res = calcNclScores(sc);
+
+        const selOpt = (fieldKey) => `
+          <select onchange="updateNclField(${idx}, '${activeModuleId}', '${fieldKey}', this.value)">
+            <option value="">-</option>
+            <option value="1" ${sc[fieldKey] == 1 ? 'selected' : ''}>1 (20)</option>
+            <option value="2" ${sc[fieldKey] == 2 ? 'selected' : ''}>2 (40)</option>
+            <option value="3" ${sc[fieldKey] == 3 ? 'selected' : ''}>3 (60)</option>
+            <option value="4" ${sc[fieldKey] == 4 ? 'selected' : ''}>4 (80)</option>
+            <option value="5" ${sc[fieldKey] == 5 ? 'selected' : ''}>5 (100)</option>
+          </select>
+        `;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td><input type="text" value="${escapeHtml(p.name || '')}" placeholder="Nama..." oninput="updateIdentity(${idx}, 'name', this.value)"></td>
+          <td><input type="text" value="${escapeHtml(p.telp || '')}" placeholder="08..." oninput="updateIdentity(${idx}, 'telp', this.value)"></td>
+          <td>${selOpt('pre1')}</td>
+          <td>${selOpt('pre2')}</td>
+          <td>${selOpt('pre3')}</td>
+          <td>${selOpt('pre4')}</td>
+          <td>${selOpt('pre5')}</td>
+          <td class="bold-val" style="background:#f3e8ff;color:var(--purple);">${res.pre !== '' ? res.pre.toFixed(1) : '-'}</td>
+          <td>${selOpt('post1')}</td>
+          <td>${selOpt('post2')}</td>
+          <td>${selOpt('post3')}</td>
+          <td>${selOpt('post4')}</td>
+          <td>${selOpt('post5')}</td>
+          <td class="bold-val" style="background:#f3e8ff;color:var(--purple);">${res.post !== '' ? res.post.toFixed(1) : '-'}</td>
+          <td class="bold-val" style="color:${res.growth > 0 ? '#166534' : res.growth < 0 ? '#991b1b' : '#475569'}">
+            ${res.growth !== null ? (res.growth > 0 ? '+' + res.growth.toFixed(1) : res.growth.toFixed(1)) : '-'}
+          </td>
+          <td class="bold-val" style="color:${res.pct > 0 ? '#166534' : res.pct < 0 ? '#991b1b' : '#475569'}">
+            ${res.pct !== null ? (res.pct > 0 ? '+' + res.pct.toFixed(1) + '%' : res.pct.toFixed(1) + '%') : '-'}
+          </td>
+          <td>${res.pred.cls ? `<span class="badge ${res.pred.cls}">${res.pred.label}</span>` : '-'}</td>
+          <td><button class="del-btn" title="Hapus" onclick="deleteRow(${idx})">✕</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    updateSummary();
+  }
+
+  function updateIdentity(idx, field, val) {
+    participants[idx][field] = val;
+    saveState();
+    updateSummary();
+  }
+
+  function updateNclField(idx, modId, fieldKey, val) {
+    if (!participants[idx].scores) participants[idx].scores = {};
+    if (!participants[idx].scores[modId]) participants[idx].scores[modId] = {};
+    participants[idx].scores[modId][fieldKey] = val;
+    saveState();
+    renderTable();
+  }
+
+  function updateSummary() {
+    const isMaster = activeModuleId === 'MASTER';
+    const grid = document.getElementById('statsGrid');
+
+    let validNames = 0, sumPre = 0, cntPre = 0, sumPost = 0, cntPost = 0, sumGrowth = 0, sumPct = 0, cntGrowth = 0;
+
+    participants.forEach(p => {
+      if (p.name && p.name.trim() !== '') validNames++;
+      let sc;
+      if (isMaster) {
+        sc = getParticipantAggregateScores(p);
+      } else {
+        sc = calcNclScores((p.scores && p.scores[activeModuleId]) || {});
+      }
+
+      if (sc.pre !== '' && sc.pre !== null && !isNaN(parseFloat(sc.pre))) { sumPre += parseFloat(sc.pre); cntPre++; }
+      if (sc.post !== '' && sc.post !== null && !isNaN(parseFloat(sc.post))) { sumPost += parseFloat(sc.post); cntPost++; }
+      if (sc.growth !== null) { sumGrowth += sc.growth; sumPct += sc.pct; cntGrowth++; }
+    });
+
+    const avgPre = cntPre ? sumPre / cntPre : 0;
+    const avgPost = cntPost ? sumPost / cntPost : 0;
+    const avgGrowth = cntGrowth ? +(sumGrowth / cntGrowth).toFixed(1) : 0;
+    const avgPct = cntGrowth ? +(sumPct / cntGrowth).toFixed(1) : 0;
+
+    grid.innerHTML = `
+      <div class="stat-card"><span>Total Peserta</span><strong>${validNames}</strong></div>
+      <div class="stat-card"><span>${isMaster ? 'Agregat Pre Test' : 'Rata-rata Pre Test'}</span><strong>${avgPre.toFixed(1)}</strong></div>
+      <div class="stat-card"><span>${isMaster ? 'Agregat Post Test' : 'Rata-rata Post Test'}</span><strong>${avgPost.toFixed(1)}</strong></div>
+      <div class="stat-card"><span>${isMaster ? 'Agregat Growth' : 'Rata-rata Growth'}</span><strong>${cntGrowth ? (avgGrowth > 0 ? '+' + avgGrowth.toFixed(1) : avgGrowth.toFixed(1)) : '0.0'}</strong></div>
+      <div class="stat-card"><span>Prosentase Growth</span><strong>${cntGrowth ? (avgPct > 0 ? '+' + avgPct.toFixed(1) + '%' : avgPct.toFixed(1) + '%') : '0.0%'}</strong></div>
+      <div class="stat-card"><span>Predikat Keseluruhan</span><strong style="font-size:0.98rem;margin-top:8px;">${cntGrowth ? getPredikat(avgGrowth).label : '-'}</strong></div>
+    `;
+  }
+
+  function addRow() {
+    participants.push({ name: '', telp: '', scores: {} });
+    saveState();
+    renderTable();
+  }
+
+  function deleteRow(idx) {
+    participants.splice(idx, 1);
+    if (participants.length === 0) addRow();
+    else { saveState(); renderTable(); }
+  }
+
+  function resetAll() {
+    if (confirm('Reset seluruh data peserta dan penilaian 5 Aspek NCL Rubric pada 11 modul?')) {
+      participants = Array.from({ length: 10 }, () => ({ name: '', telp: '', scores: {} }));
+      saveState();
+      renderTable();
+    }
+  }
+
+  function processPastedText(text, startIdx = 0) {
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length === 1 && !lines[0].includes('\t')) return false;
+
+    lines.forEach((line, offset) => {
+      const cols = line.split('\t');
+      const idx = startIdx + offset;
+      if (!participants[idx]) participants[idx] = { name: '', telp: '', scores: {} };
+      if (cols[0] !== undefined) participants[idx].name = cols[0].trim();
+      if (cols[1] !== undefined) participants[idx].telp = cols[1].trim();
+
+      if (activeModuleId !== 'MASTER') {
+        if (!participants[idx].scores[activeModuleId]) participants[idx].scores[activeModuleId] = {};
+        const keys = ['pre1', 'pre2', 'pre3', 'pre4', 'pre5', 'post1', 'post2', 'post3', 'post4', 'post5'];
+        keys.forEach((k, kIdx) => {
+          if (cols[2 + kIdx] !== undefined) participants[idx].scores[activeModuleId][k] = cols[2 + kIdx].trim();
+        });
+      }
+    });
+    saveState();
+    renderTable();
+    return true;
+  }
+
+  async function pasteFromClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!processPastedText(text, 0)) alert('Clipboard tidak berisi data multi-kolom dari Excel.');
+    } catch {
+      alert('Klik kolom Name baris pertama lalu tekan Ctrl+V.');
+    }
+  }
+
+  function exportToWordDoc() {
+    const modObj = MODULES.find(m => m.id === activeModuleId);
+    const isMaster = activeModuleId === 'MASTER';
+
+    let tableHtml = '';
+    if (isMaster) {
+      tableHtml = `
+        <thead>
+          <tr>
+            <th>No</th><th>Name</th><th>Telp Number</th>
+            <th>Agregat Pre (100)</th><th>Agregat Post (100)</th><th>Growth</th><th>% Growth</th><th>Predikat Keseluruhan</th>
+          </tr>
+        </thead><tbody>`;
+      participants.forEach((p, idx) => {
+        if (!p.name && !p.telp) return;
+        const agg = getParticipantAggregateScores(p);
+        tableHtml += `<tr>
+          <td>${idx + 1}</td><td style="text-align:left;">${escapeHtml(p.name)}</td><td>${escapeHtml(p.telp)}</td>
+          <td>${agg.pre !== '' ? agg.pre : '-'}</td><td>${agg.post !== '' ? agg.post : '-'}</td>
+          <td><b>${agg.growth !== null ? (agg.growth > 0 ? '+' + agg.growth.toFixed(1) : agg.growth.toFixed(1)) : '-'}</b></td>
+          <td><b>${agg.pct !== null ? (agg.pct > 0 ? '+' + agg.pct.toFixed(1) + '%' : agg.pct.toFixed(1) + '%') : '-'}</b></td>
+          <td>${agg.pred.label}</td>
+        </tr>`;
+      });
+      tableHtml += `</tbody>`;
+    } else {
+      tableHtml = `
+        <thead>
+          <tr>
+            <th>No</th><th>Name</th><th>Telp Number</th>
+            <th>Pre Compr</th><th>Pre Fluen</th><th>Pre Vocab</th><th>Pre Pron</th><th>Pre Gram</th><th>Pre (100)</th>
+            <th>Post Compr</th><th>Post Fluen</th><th>Post Vocab</th><th>Post Pron</th><th>Post Gram</th><th>Post (100)</th>
+            <th>Growth</th><th>% Growth</th><th>Predikat</th>
+          </tr>
+        </thead><tbody>`;
+      participants.forEach((p, idx) => {
+        if (!p.name && !p.telp) return;
+        const s = (p.scores && p.scores[activeModuleId]) || {};
+        const res = calcNclScores(s);
+        tableHtml += `<tr>
+          <td>${idx + 1}</td><td style="text-align:left;">${escapeHtml(p.name)}</td><td>${escapeHtml(p.telp)}</td>
+          <td>${s.pre1 || '-'}</td><td>${s.pre2 || '-'}</td><td>${s.pre3 || '-'}</td><td>${s.pre4 || '-'}</td><td>${s.pre5 || '-'}</td><td><b>${res.pre !== '' ? res.pre.toFixed(1) : '-'}</b></td>
+          <td>${s.post1 || '-'}</td><td>${s.post2 || '-'}</td><td>${s.post3 || '-'}</td><td>${s.post4 || '-'}</td><td>${s.post5 || '-'}</td><td><b>${res.post !== '' ? res.post.toFixed(1) : '-'}</b></td>
+          <td><b>${res.growth !== null ? (res.growth > 0 ? '+' + res.growth.toFixed(1) : res.growth.toFixed(1)) : '-'}</b></td>
+          <td><b>${res.pct !== null ? (res.pct > 0 ? '+' + res.pct.toFixed(1) + '%' : res.pct.toFixed(1) + '%') : '-'}</b></td>
+          <td>${res.pred.label}</td>
+        </tr>`;
+      });
+      tableHtml += `</tbody>`;
+    }
+
+    const docContent = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head><meta charset='utf-8'><title>${modObj.full}</title>
+      <style>
+        @page { size: A4 landscape; margin: 1.5cm; }
+        body { font-family: Calibri, Arial, sans-serif; font-size: 10pt; color: #1e293b; }
+        h2 { text-align: center; color: #1b365d; margin-bottom: 2px; font-size: 14pt; }
+        p.sub { text-align: center; color: #475569; margin-top: 0; margin-bottom: 14px; font-size: 10pt; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background-color: #1b365d; color: #ffffff; padding: 6px; border: 1px solid #334155; font-size: 9pt; }
+        td { padding: 5px 6px; border: 1px solid #94a3b8; text-align: center; font-size: 9pt; }
+        tr:nth-child(even) td { background-color: #f8fafc; }
+        .sign { margin-top: 28px; width: 100%; }
+        .sign td { border: none; background: transparent !important; text-align: center; width: 50%; }
+      </style></head><body>
+        <h2>LAPORAN PENILAIAN UPGRADING BP3MI ACEH</h2>
+        <p class="sub">KERJASAMA DENGAN AKPER TEUNGKU FAKINAH BANDA ACEH<br/>Modul: ${modObj.full}</p>
+        <table>${tableHtml}</table>
+        <table class="sign">
+          <tr>
+            <td>Mengetahui,<br/>Koordinator Program BP3MI Aceh<br/><br/><br/><br/>( ............................................ )</td>
+            <td>Banda Aceh, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}<br/>Evaluator / Instruktur AKPER Teungku Fakinah<br/><br/><br/><br/>( ............................................ )</td>
+          </tr>
+        </table>
+      </body></html>
+    `;
+
+    const blob = new Blob(['\ufeff', docContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Laporan_${modObj.id}_BP3MI_AKPER.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  function printOrSavePdf() {
+    window.print();
+  }
+
+  function exportAllToExcel() {
+    const wb = XLSX.utils.book_new();
+
+    const masterHeader = [
+      'No', 'Name', 'Telp Number',
+      'Agregat Pre Test (100)', 'Agregat Post Test (100)', 'Agregat Growth', 'Prosentase of Growth', 'Predikat Growth',
+      ...EXAM_11_MODULES.map(m => m.label + ' Pre'),
+      ...EXAM_11_MODULES.map(m => m.label + ' Post')
+    ];
+
+    const masterRows = [
+      ['MASTER REKAPITULASI — 11 MODUL KOMPETENSI TERINTEGRASI 5 ASPEK NCL RUBRIC / SOLO TAXONOMY'],
+      [],
+      masterHeader
+    ];
+
+    participants.forEach((p, i) => {
+      const r = i + 4;
+      const preModRefs = EXAM_11_MODULES.map(m => `'${m.label.replace(/[:\\/?*\[\]]/g, '')}'!I${r}`).join(',');
+      const postModRefs = EXAM_11_MODULES.map(m => `'${m.label.replace(/[:\\/?*\[\]]/g, '')}'!O${r}`).join(',');
+      const preModVals = EXAM_11_MODULES.map(m => {
+        const s = (p.scores && p.scores[m.id]) || {};
+        const res = calcNclScores(s);
+        return res.pre;
+      });
+      const postModVals = EXAM_11_MODULES.map(m => {
+        const s = (p.scores && p.scores[m.id]) || {};
+        const res = calcNclScores(s);
+        return res.post;
+      });
+
+      masterRows.push([
+        i + 1,
+        p.name || '',
+        p.telp || '',
+        { f: `IFERROR(AVERAGE(${preModRefs}),"")` },
+        { f: `IFERROR(AVERAGE(${postModRefs}),"")` },
+        { f: `IF(OR(D${r}="",E${r}=""),"",E${r}-D${r})` },
+        { f: `IF(F${r}="","",IF(D${r}=0,IF(E${r}>0,1,0),(E${r}-D${r})/D${r}))` },
+        { f: `IF(F${r}="","",IF(F${r}>=20,"Sangat Meningkat",IF(F${r}>=10,"Meningkat",IF(F${r}>0,"Cukup Meningkat",IF(F${r}=0,"Tetap / Stagnan","Menurun")))))` },
+        ...preModVals,
+        ...postModVals
+      ]);
+    });
+
+    const wsMaster = XLSX.utils.aoa_to_sheet(masterRows);
+    XLSX.utils.book_append_sheet(wb, wsMaster, 'Master Rekap');
+
+    EXAM_11_MODULES.forEach(m => {
+      const sName = m.label.replace(/[:\\/?*\[\]]/g, '').slice(0, 31);
+      const sheetData = [
+        [m.full],
+        [],
+        [
+          'No', 'Name', 'Telp Number',
+          'Pre Compr', 'Pre Fluen', 'Pre Vocab', 'Pre Pron', 'Pre Gram', 'Pre Test (100)',
+          'Post Compr', 'Post Fluen', 'Post Vocab', 'Post Pron', 'Post Gram', 'Post Test (100)',
+          'Growth', 'Prosentase of Growth', 'Predikat Growth'
+        ]
+      ];
+
+      participants.forEach((p, i) => {
+        const r = i + 4;
+        const s = (p.scores && p.scores[m.id]) || {};
+        const toNum = v => (v !== '' && v !== undefined && !isNaN(parseFloat(v))) ? parseFloat(v) : null;
+
+        sheetData.push([
+          { f: `'Master Rekap'!A${r}` },
+          { f: `'Master Rekap'!B${r}` },
+          { f: `'Master Rekap'!C${r}` },
+          toNum(s.pre1), toNum(s.pre2), toNum(s.pre3), toNum(s.pre4), toNum(s.pre5),
+          { f: `IF(COUNT(D${r}:H${r})=0,"",(SUM(D${r}:H${r})/5)*20)` },
+          toNum(s.post1), toNum(s.post2), toNum(s.post3), toNum(s.post4), toNum(s.post5),
+          { f: `IF(COUNT(J${r}:N${r})=0,"",(SUM(J${r}:N${r})/5)*20)` },
+          { f: `IF(OR(I${r}="",O${r}=""),"",O${r}-I${r})` },
+          { f: `IF(P${r}="","",IF(I${r}=0,IF(O${r}>0,1,0),(O${r}-I${r})/I${r}))` },
+          { f: `IF(P${r}="","",IF(P${r}>=20,"Sangat Meningkat",IF(P${r}>=10,"Meningkat",IF(P${r}>0,"Cukup Meningkat",IF(P${r}=0,"Tetap / Stagnan","Menurun")))))` }
+        ]);
+      });
+
+      const wsMod = XLSX.utils.aoa_to_sheet(sheetData);
+      XLSX.utils.book_append_sheet(wb, wsMod, sName);
+    });
+
+    XLSX.writeFile(wb, 'Penilaian_Upgrading_NCL_Rubric_Terintegrasi_11_Modul.xlsx');
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+  }
+
+  renderNav();
+  renderTable();
+</script>
+</body>
+</html>
